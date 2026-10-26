@@ -1,0 +1,26 @@
+csiDriver:
+  name: org.democratic-csi.iscsi-nvme
+
+storageClasses:
+  - name: iscsi-nvme
+    defaultClass: false
+    reclaimPolicy: Retain
+    volumeBindingMode: Immediate
+    allowVolumeExpansion: true
+    parameters:
+      fsType: ext4
+    mountOptions:
+      - noatime
+
+volumeSnapshotClasses:
+  - name: iscsi-nvme
+
+driver:
+  config:
+    instance_id: iscsi-nvme
+    zfs:
+      datasetParentName: sonic/k8s/iscsi/v
+      detachedSnapshotsDatasetParentName: sonic/k8s/iscsi/s
+    iscsi:
+      namePrefix: csi-nvme-
+      extentRpm: "SSD"

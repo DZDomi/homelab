@@ -1,0 +1,10 @@
+driver:
+  config:
+    driver: freenas-api-nfs
+    zfs:
+      datasetEnableQuotas: true
+    nfs:
+      shareHost: truenas.example.com
+      shareCommentTemplate: "{{ parameters.[csi.storage.k8s.io/pvc/namespace] }}/{{ parameters.[csi.storage.k8s.io/pvc/name] }}"
+      shareMaprootUser: root
+      shareMaprootGroup: root

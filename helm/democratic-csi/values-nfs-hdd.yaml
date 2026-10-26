@@ -1,0 +1,23 @@
+csiDriver:
+  name: org.democratic-csi.nfs-hdd
+
+storageClasses:
+  - name: nfs-hdd
+    defaultClass: false
+    reclaimPolicy: Retain
+    volumeBindingMode: Immediate
+    allowVolumeExpansion: true
+    parameters:
+      fsType: nfs
+    mountOptions:
+      - noatime
+
+volumeSnapshotClasses:
+  - name: nfs-hdd
+
+driver:
+  config:
+    instance_id: nfs-hdd
+    zfs:
+      datasetParentName: rotato/k8s/nfs/v
+      detachedSnapshotsDatasetParentName: rotato/k8s/nfs/s

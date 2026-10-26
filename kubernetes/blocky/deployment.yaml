@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: blocky
+  name: blocky
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: blocky
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "4000"
+        prometheus.io/path: /metrics
+      labels:
+        app: blocky
+    spec:
+      containers:
+        - name: blocky
+          image: spx01/blocky:v0.35.0
+          ports:
+            - name: dns-tls
+              containerPort: 53
+            - name: dns-udp
+              containerPort: 53
+              protocol: UDP
+            - name: http
+              containerPort: 4000
+          volumeMounts:
+            - name: config
+              mountPath: /app/config.yml
+              subPath: config.yaml
+      volumes:
+        - name: config
+          configMap:
+            name: blocky-config
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: blocky
+          matchLabelKeys:
+            - pod-template-hash

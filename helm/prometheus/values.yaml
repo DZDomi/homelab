@@ -1,0 +1,47 @@
+server:
+  # 15s is what upstream dashboards assume; the Cilium/Hubble ones hardcode rate(...[1m])
+  global:
+    scrape_interval: 15s
+  persistentVolume:
+    storageClass: iscsi-nvme
+    size: 32Gi
+  # drop old blocks before the volume fills up
+  retentionSize: 28GB
+
+alertmanager:
+  enabled: false
+
+prometheus-node-exporter:
+  enabled: false
+
+prometheus-pushgateway:
+  enabled: false
+
+# CNPG instance pods can't carry scrape annotations (the cluster chart has no inheritedMetadata),
+# so scrape them by label. The cluster label is what the CloudNativePG dashboard groups by.
+extraScrapeConfigs: |
+  - job_name: cnpg
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_cnpg_io_podRole]
+        regex: instance
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_container_port_name]
+        regex: metrics
+        action: keep
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      - source_labels: [__meta_kubernetes_pod_label_cnpg_io_cluster]
+        target_label: cluster
+  # The exporter scrapes one UPS per request (?ups=), and the NUT dashboard filters on the ups label
+  - job_name: nut
+    metrics_path: /ups_metrics
+    params:
+      ups: [ups]
+    static_configs:
+      - targets: [nut-exporter.nut.svc.cluster.local:9199]
+        labels:
+          ups: ups

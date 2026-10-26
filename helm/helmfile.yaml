@@ -1,0 +1,198 @@
+repositories:
+  - name: cilium
+    url: https://helm.cilium.io
+  - name: metrics-server
+    url: https://kubernetes-sigs.github.io/metrics-server
+  - name: jetstack
+    url: https://charts.jetstack.io
+  - name: traefik
+    url: https://traefik.github.io/charts
+  - name: democratic-csi
+    url: https://democratic-csi.github.io/charts
+  - name: external-dns
+    url: https://kubernetes-sigs.github.io/external-dns
+  - name: prometheus
+    url: https://prometheus-community.github.io/helm-charts
+  - name: grafana
+    url: https://grafana.github.io/helm-charts
+  - name: twuni
+    url: https://twuni.github.io/docker-registry.helm
+  - name: cnpg
+    url: https://cloudnative-pg.github.io/charts
+  - name: gitea-charts
+    url: https://dl.gitea.com/charts
+  - name: pajikos
+    url: https://pajikos.github.io/home-assistant-helm-chart
+  - name: itzg
+    url: https://itzg.github.io/minecraft-server-charts
+  - name: vmware-tanzu
+    url: https://vmware-tanzu.github.io/helm-charts
+  - name: valkey
+    url: https://valkey.io/valkey-helm
+  - name: descheduler
+    url: https://kubernetes-sigs.github.io/descheduler
+releases:
+  - name: cilium
+    namespace: kube-system
+    chart: cilium/cilium
+    version: 1.20.4
+    values:
+      - cilium/values.yaml
+  - name: external-dns
+    namespace: external-dns
+    chart: external-dns/external-dns
+    version: 1.23.0
+    values:
+      - external-dns/values.yaml
+  - name: cert-manager
+    namespace: cert-manager
+    chart: jetstack/cert-manager
+    version: v1.21.3
+    values:
+      - cert-manager/values.yaml
+  - name: traefik
+    namespace: traefik
+    chart: traefik/traefik
+    version: 41.7.1
+    values:
+      - traefik/values.yaml
+  - name: prometheus
+    namespace: prometheus
+    chart: prometheus/prometheus
+    version: 29.37.1
+    values:
+      - prometheus/values.yaml
+  - name: prometheus-node-exporter
+    namespace: prometheus
+    chart: prometheus/prometheus-node-exporter
+    version: 4.60.1
+  - name: grafana
+    namespace: grafana
+    chart: grafana/grafana
+    version: 10.5.15
+    values:
+      - grafana/values.yaml
+      - grafana/dashboards.yaml.gotmpl
+  - name: zfs-iscsi-hdd
+    namespace: democratic-csi
+    chart: democratic-csi/democratic-csi
+    version: 0.15.1
+    values:
+      - democratic-csi/values.yaml
+      - democratic-csi/values-iscsi.yaml
+      - democratic-csi/values-iscsi-hdd.yaml
+      - democratic-csi/secrets.yaml.gotmpl
+  - name: zfs-iscsi-nvme
+    namespace: democratic-csi
+    chart: democratic-csi/democratic-csi
+    version: 0.15.1
+    values:
+      - democratic-csi/values.yaml
+      - democratic-csi/values-iscsi.yaml
+      - democratic-csi/values-iscsi-nvme.yaml
+      - democratic-csi/secrets.yaml.gotmpl
+  - name: zfs-nfs-hdd
+    namespace: democratic-csi
+    chart: democratic-csi/democratic-csi
+    version: 0.15.1
+    values:
+      - democratic-csi/values.yaml
+      - democratic-csi/values-nfs.yaml
+      - democratic-csi/values-nfs-hdd.yaml
+      - democratic-csi/secrets.yaml.gotmpl
+  - name: snapshot-controller
+    namespace: kube-system
+    chart: democratic-csi/snapshot-controller
+    version: 0.3.0
+  - name: metrics-server
+    namespace: kube-system
+    chart: metrics-server/metrics-server
+    version: 3.14.0
+    values:
+      - metrics-server/values.yaml
+  - name: descheduler
+    namespace: kube-system
+    chart: descheduler/descheduler
+    version: 0.37.0
+    values:
+      - descheduler/values.yaml
+  - name: docker-registry
+    namespace: docker-registry
+    chart: twuni/docker-registry
+    version: 3.0.0
+    values:
+      - docker-registry/values.yaml
+      - docker-registry/secrets.yaml.gotmpl
+  - name: cnpg
+    namespace: cnpg-system
+    chart: cnpg/cloudnative-pg
+    version: 0.29.1
+    values:
+      - cnpg/values.yaml
+  - name: gitea
+    namespace: cnpg-database
+    chart: cnpg/cluster
+    version: 0.9.0
+    values:
+      - cnpg-cluster/values.yaml
+  - name: gitea
+    namespace: gitea
+    chart: gitea-charts/gitea
+    version: 12.7.0
+    values:
+      - gitea/values.yaml
+  - name: home-assistant
+    namespace: home-assistant
+    chart: pajikos/home-assistant
+    version: 0.3.89
+    values:
+      - home-assistant/values.yaml
+      #  - name: immich
+      #    namespace: immich
+      #    chart: oci://ghcr.io/immich-app/immich-charts/immich
+      #    version: 0.10.3
+      #    values:
+      #      - immich/values.yaml
+      #  - name: immich
+      #    namespace: cnpg-database
+      #    chart: cnpg/cluster
+      #    version: 0.4.0
+      #    values:
+      #      - cnpg-cluster/values.yaml
+      #      - cnpg-cluster/values-immich.yaml
+  - name: teslamate
+    namespace: cnpg-database
+    chart: cnpg/cluster
+    version: 0.9.0
+    values:
+      - cnpg-cluster/values.yaml
+      - cnpg-cluster/values-teslamate.yaml
+  - name: paperless-ngx
+    namespace: cnpg-database
+    chart: cnpg/cluster
+    version: 0.9.0
+    values:
+      - cnpg-cluster/values.yaml
+      - cnpg-cluster/values-paperless-ngx.yaml
+  - name: valkey
+    namespace: paperless-ngx
+    chart: valkey/valkey
+    version: 0.12.0
+  - name: minecraft
+    namespace: minecraft
+    chart: itzg/minecraft
+    version: 5.2.0
+    values:
+      - minecraft/values.yaml
+  - name: renovate
+    namespace: renovate
+    chart: oci://ghcr.io/renovatebot/charts/renovate
+    version: 46.378.2
+    values:
+      - renovate/values.yaml
+  - name: velero
+    namespace: velero
+    chart: vmware-tanzu/velero
+    version: 12.2.1
+    values:
+      - velero/values.yaml

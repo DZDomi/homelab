@@ -1,0 +1,16 @@
+#version:
+#  postgresql: "17"
+#
+#cluster:
+#  storage:
+#    size: 20Gi
+#  imageName: ghcr.io/tensorchord/cloudnative-vectorchord:17.6-0.5.3
+#
+#  postgresql:
+#    shared_preload_libraries:
+#      - "vchord.so"
+#
+#  initdb:
+#    postInitApplicationSQL:
+#      - CREATE EXTENSION vchord CASCADE;
+#      - CREATE EXTENSION earthdistance CASCADE;

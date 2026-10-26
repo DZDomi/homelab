@@ -1,0 +1,129 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "kubernetes": {
+    "managerFilePatterns": [
+      "kubernetes/**/*.yaml"
+    ]
+  },
+  "helm-values": {
+    "managerFilePatterns": [
+      "/(^|/)helm/.+/values(-[^/]+)?\\.ya?ml$/"
+    ]
+  },
+  "customDatasources": {
+    "minecraft": {
+      "defaultRegistryUrlTemplate": "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json",
+      "transformTemplates": [
+        "{\"releases\": versions[type = 'release'].{\"version\": id, \"releaseTimestamp\": releaseTime}}"
+      ]
+    }
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Versions annotated with a `# renovate: datasource=... depName=...` comment on the line above",
+      "managerFilePatterns": [
+        "/\\.tofu$/",
+        "/(^|/)helm/.+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(\\s+versioning=(?<versioning>\\S+))?\\s*\\n\\s*[\\w.-]+\\s*[:=]\\s*\"?(?<currentValue>[^\"\\s]+)\"?"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver-coerced{{/if}}"
+    },
+    {
+      "customType": "regex",
+      "description": "democratic-csi chart puts the full image name in `registry:` instead of `repository:`",
+      "managerFilePatterns": [
+        "/(^|/)helm/democratic-csi/values.*\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "registry:\\s*(?<depName>\\S+)\\s*\\n(?<indentation>[ \\t]*)tag:\\s*\"?(?<currentValue>[^\"\\s@]+)(@(?<currentDigest>sha256:[a-f0-9]+))?\"?"
+      ],
+      "datasourceTemplate": "docker",
+      "autoReplaceStringTemplate": "registry: {{{depName}}}\n{{{indentation}}}tag: {{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}"
+    },
+    {
+      "customType": "regex",
+      "description": "Self-built lighthouse image follows its upstream base image; the -N suffix is the local build number",
+      "managerFilePatterns": [
+        "kubernetes/ethereum/**/*.yaml"
+      ],
+      "matchStrings": [
+        "docker-registry\\.example\\.com/lighthouse:(?<currentValue>v\\d+\\.\\d+\\.\\d+)-\\d+"
+      ],
+      "depNameTemplate": "sigp/lighthouse",
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Self-built reth image follows its upstream base image; the -N suffix is the local build number",
+      "managerFilePatterns": [
+        "kubernetes/ethereum/**/*.yaml"
+      ],
+      "matchStrings": [
+        "docker-registry\\.example\\.com/reth:(?<currentValue>v\\d+\\.\\d+\\.\\d+)-\\d+"
+      ],
+      "depNameTemplate": "ghcr.io/paradigmxyz/reth",
+      "datasourceTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": [
+        "docker-registry.example.com/**"
+      ],
+      "matchManagers": [
+        "kubernetes"
+      ],
+      "enabled": false,
+      "description": "Tracked through their upstream base images by the ethereum custom manager instead"
+    },
+    {
+      "matchPackageNames": [
+        "sigp/lighthouse"
+      ],
+      "groupName": "lighthouse",
+      "description": "Bump the Dockerfile and the deployed tag together; rebuild and push the image before merging"
+    },
+    {
+      "matchPackageNames": [
+        "ghcr.io/paradigmxyz/reth"
+      ],
+      "groupName": "reth",
+      "description": "Bump the Dockerfile and the deployed tag together; rebuild and push the image before merging"
+    },
+    {
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchCurrentValue": "/^(latest|next|\\d+)$/",
+      "pinDigests": true,
+      "description": "Floating tags (latest, next, bare major) carry no version, so pin a digest to get update PRs"
+    },
+    {
+      "matchPackageNames": [
+        "ghcr.io/cloudnative-pg/postgresql"
+      ],
+      "extractVersion": "^(?<version>\\d+)\\.\\d+$",
+      "versioning": "docker",
+      "description": "The cnpg cluster chart only takes the PostgreSQL major version (no digest); major upgrades need a CNPG in-place upgrade",
+      "pinDigests": false
+    },
+    {
+      "matchPackageNames": [
+        "siderolabs/talos",
+        "kubernetes/kubernetes"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ],
+      "dependencyDashboardApproval": true,
+      "description": "Minor Talos/Kubernetes upgrades must respect the Talos support matrix, so require approval on the dashboard"
+    }
+  ]
+}

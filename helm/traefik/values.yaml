@@ -1,0 +1,104 @@
+deployment:
+  replicas: 2
+accessLog:
+  enabled: true
+global:
+  checkNewVersion: false
+additionalArguments:
+  - "--entryPoints.traefik.http.aliasHeadersStrategy=reject"
+  - "--entryPoints.metrics.http.aliasHeadersStrategy=reject"
+ingressClass:
+  enabled: false
+providers:
+  kubernetesIngress:
+    enabled: false
+  kubernetesGateway:
+    enabled: true
+  kubernetesCRD:
+    safeNaming: true
+    allowCrossNamespace: true
+  file:
+    enabled: true
+    content:
+      http:
+        serversTransports:
+          insecure:
+            insecureSkipVerify: true
+        routers:
+          proxmox:
+            rule: "Host(`proxmox.example.com`)"
+            service: proxmox
+          truenas:
+            rule: "Host(`truenas-ui.example.com`)"
+            service: truenas
+        services:
+          proxmox:
+            loadBalancer:
+              serversTransport: insecure
+              passHostHeader: true
+              servers:
+                - url: https://pve.example.com:8006
+          truenas:
+            loadBalancer:
+              serversTransport: insecure
+              passHostHeader: true
+              servers:
+                - url: https://truenas.example.com
+gateway:
+  name: traefik
+  listeners:
+    example-com:
+      port: 8443
+      protocol: HTTPS
+      hostname: "*.example.com"
+      namespacePolicy:
+        from: All
+      mode: Terminate
+      certificateRefs:
+        - name: example-com-tls
+    example-com-public:
+      port: 8444
+      protocol: HTTPS
+      hostname: "*.example.com"
+      namespacePolicy:
+        from: All
+      mode: Terminate
+      certificateRefs:
+        - name: example-com-tls
+ports:
+  traefik:
+    expose:
+      default: true
+  web:
+    http:
+      aliasHeadersStrategy: reject
+  websecure:
+    http:
+      aliasHeadersStrategy: reject
+      # Default-deny: every router on this entrypoint gets this middleware
+      # unconditionally, in addition to any middleware the router declares itself.
+      # Public exceptions must attach to the websecure-public entrypoint instead.
+      middlewares:
+        - traefik_allow-local-network@kubernetescrd
+  websecure-public:
+    port: 8444
+    expose:
+      default: true
+    exposedPort: 8444
+    http:
+      aliasHeadersStrategy: reject
+  ssh:
+    port: 2222
+    expose:
+      default: true
+    exposedPort: 22
+    protocol: TCP
+ingressRoute:
+  dashboard:
+    enabled: true
+service:
+  annotations:
+    lbipam.cilium.io/ips: 10.1.3.3,10.1.4.5
+nodeSelector:
+  vlan.example.com/servers: "true"
+  vlan.example.com/external: "true"

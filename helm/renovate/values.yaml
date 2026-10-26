@@ -1,0 +1,21 @@
+existingSecret: renovate-credentials
+
+renovate:
+  config: |
+    {
+      "platform": "gitea",
+      "endpoint": "http://gitea-http.gitea.svc.cluster.local:3000/api/v1/",
+      "autodiscover": false,
+      "repositories": ["DZDomi/homelab"],
+      "internalHostAccess": "block",
+      "hostRules": [
+        {
+          "matchHost": "gitea-http.gitea.svc.cluster.local",
+          "allowInternal": true
+        }
+      ]
+    }
+
+cronjob:
+  # Quoted: the chart wraps these in `with`, which drops a plain 0
+  successfulJobsHistoryLimit: "0"

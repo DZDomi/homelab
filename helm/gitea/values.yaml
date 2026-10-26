@@ -1,0 +1,37 @@
+strategy:
+  type: Recreate
+
+global:
+  storageClass: iscsi-nvme
+
+persistence:
+  labels:
+    backup.example.com/offsite: "true"
+
+gitea:
+  config:
+    database:
+      DB_TYPE: postgres
+      HOST: gitea-cluster-rw.cnpg-database.svc.cluster.local
+      NAME: app
+      USER: app
+    server:
+      DOMAIN: gitea.example.com
+      ROOT_URL: https://gitea.example.com
+
+  additionalConfigFromEnvs:
+    - name: GITEA__DATABASE__PASSWD
+      valueFrom:
+        secretKeyRef:
+          name: postgres-credentials
+          key: password
+
+  admin:
+    existingSecret: admin-credentials
+    email: admin@example.com
+
+postgresql:
+  enabled: false
+
+postgresql-ha:
+  enabled: false

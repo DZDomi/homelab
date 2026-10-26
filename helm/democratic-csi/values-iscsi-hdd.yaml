@@ -1,0 +1,26 @@
+csiDriver:
+  name: org.democratic-csi.iscsi-hdd
+
+storageClasses:
+  - name: iscsi-hdd
+    defaultClass: false
+    reclaimPolicy: Retain
+    volumeBindingMode: Immediate
+    allowVolumeExpansion: true
+    parameters:
+      fsType: ext4
+    mountOptions:
+      - noatime
+
+volumeSnapshotClasses:
+  - name: iscsi-hdd
+
+driver:
+  config:
+    instance_id: iscsi-hdd
+    zfs:
+      datasetParentName: rotato/k8s/iscsi/v
+      detachedSnapshotsDatasetParentName: rotato/k8s/iscsi/s
+    iscsi:
+      namePrefix: csi-hdd-
+      extentRpm: "7200"

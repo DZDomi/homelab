@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: ethereum
+  name: lighthouse
+spec:
+  replicas: 1
+  serviceName: lighthouse
+  selector:
+    matchLabels:
+      app: lighthouse
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5054"
+        prometheus.io/path: /metrics
+      labels:
+        app: lighthouse
+    spec:
+      initContainers:
+        - name: get-external-ip
+          image: alpine/curl:8.22.0
+          args:
+            - -fsSL
+            - -o
+            - /run/init/external-ip
+            - https://ifconfig.io
+          volumeMounts:
+            - name: init
+              mountPath: /run/init
+      containers:
+        - name: lighthouse
+          image: docker-registry.example.com/lighthouse:v8.3.1-1
+          ports:
+            - name: beacon
+              containerPort: 5052
+            - name: metrics
+              containerPort: 5054
+            - name: p2p-tcp
+              containerPort: 9000
+            - name: p2p-udp
+              containerPort: 9000
+              protocol: UDP
+            - name: p2p-quic
+              containerPort: 9001
+              protocol: UDP
+          env:
+            - name: POD_ORDINAL
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
+          volumeMounts:
+            - name: storage
+              mountPath: /var/lib/lighthouse
+            - name: init
+              mountPath: /run/init
+            - name: engine-auth-rpc
+              readOnly: true
+              mountPath: /shared/jwt.hex
+              subPath: jwt.hex
+      volumes:
+        - name: init
+          emptyDir: {}
+        - name: engine-auth-rpc
+          secret:
+            secretName: engine-auth-rpc
+      terminationGracePeriodSeconds: 60
+      nodeSelector:
+        vlan.example.com/external: "true"
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+      spec:
+        storageClassName: iscsi-nvme
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 250Gi

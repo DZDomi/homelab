@@ -1,0 +1,230 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  namespace: traefik
+  name: traefik
+spec:
+  parentRefs:
+    - name: traefik
+      sectionName: example-com
+  hostnames:
+    - traefik.example.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: traefik
+          port: 8080
+#---
+#apiVersion: gateway.networking.k8s.io/v1
+#kind: HTTPRoute
+#metadata:
+#  namespace: traefik
+#  name: proxmox
+#spec:
+#  parentRefs:
+#    - name: traefik
+#      sectionName: example-com
+#  hostnames:
+#    - proxmox.example.com
+#---
+#apiVersion: gateway.networking.k8s.io/v1
+#kind: HTTPRoute
+#metadata:
+#  namespace: traefik
+#  name: truenas
+#spec:
+#  parentRefs:
+#    - name: traefik
+#      sectionName: example-com
+#  hostnames:
+#    - truenas-ui.example.com
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  namespace: grafana
+  name: grafana
+spec:
+  parentRefs:
+    - namespace: traefik
+      name: traefik
+      sectionName: example-com
+  hostnames:
+    - grafana.example.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: grafana
+          port: 80
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  namespace: docker-registry
+  name: docker-registry
+spec:
+  parentRefs:
+    - namespace: traefik
+      name: traefik
+      sectionName: example-com
+  hostnames:
+    - docker-registry.example.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: docker-registry
+          port: 5000
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  namespace: gitea
+  name: gitea
+spec:
+  parentRefs:
+    - namespace: traefik
+      name: traefik
+      sectionName: example-com
+  hostnames:
+    - gitea.example.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: gitea-http
+          port: 3000
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  namespace: gitea
+  name: gitea-ssh
+spec:
+  entryPoints:
+    - ssh
+  routes:
+    - match: HostSNI(`*`)
+      middlewares:
+        - namespace: traefik
+          name: allow-local-network
+      services:
+        - name: gitea-ssh
+          port: 22
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  namespace: home-assistant
+  name: home-assistant
+spec:
+  parentRefs:
+    - namespace: traefik
+      name: traefik
+      sectionName: example-com
+  hostnames:
+    - home-assistant.example.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: home-assistant
+          port: 8080
+---
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  namespace: teslamate
+  name: teslamate-config
+spec:
+  parentRefs:
+    - namespace: traefik
+      name: traefik
+      sectionName: example-com
+  hostnames:
+    - teslamate-config.example.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: teslamate
+          port: 80
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  namespace: teslamate
+  name: teslamate
+spec:
+  parentRefs:
+    - namespace: traefik
+      name: traefik
+      sectionName: example-com
+  hostnames:
+    - teslamate.example.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: grafana
+          port: 80
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  namespace: convertx
+  name: convertx
+spec:
+  parentRefs:
+    - namespace: traefik
+      name: traefik
+      sectionName: example-com
+  hostnames:
+    - convertx.example.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: convertx
+          port: 80
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  namespace: paperless-ngx
+  name: paperless-ngx
+spec:
+  parentRefs:
+    - namespace: traefik
+      name: traefik
+      sectionName: example-com
+  hostnames:
+    - paperless-ngx.example.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: paperless-ngx
+          port: 80

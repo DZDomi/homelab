@@ -1,0 +1,25 @@
+#controllers:
+#  main:
+#    containers:
+#      main:
+#        image:
+#          tag: v2.5.6
+#        env:
+#          DB_URL: postgresql://app:xxx@immich-cluster-rw.cnpg-database.svc.cluster.local:5432/app
+#
+#immich:
+#  persistence:
+#    library:
+#      existingClaim: storage
+#
+#valkey:
+#  enabled: true
+#  persistence:
+#    data:
+#      type: persistentVolumeClaim
+#      storageClass: iscsi-nvme
+#
+#machine-learning:
+#  persistence:
+#    cache:
+#      storageClass: iscsi-nvme

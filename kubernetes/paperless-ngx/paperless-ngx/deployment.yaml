@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: paperless-ngx
+  name: paperless-ngx
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paperless-ngx
+  template:
+    metadata:
+      labels:
+        app: paperless-ngx
+    spec:
+      containers:
+        - name: paperless-ngx
+          image: ghcr.io/paperless-ngx/paperless-ngx:3.3.4
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: paperless-ngx
+          env:
+            - name: PAPERLESS_URL
+              value: "https://paperless-ngx.example.com"
+            - name: PAPERLESS_PORT
+              value: "8000"
+            - name: PAPERLESS_TIME_ZONE
+              value: "Europe/Vienna"
+            - name: PAPERLESS_OCR_LANGUAGE
+              value: "deu+eng"
+            - name: PAPERLESS_REDIS
+              value: "redis://valkey:6379"
+            - name: PAPERLESS_TIKA_ENABLED
+              value: "1"
+            - name: PAPERLESS_TIKA_ENDPOINT
+              value: "http://tika:9998"
+            - name: PAPERLESS_TIKA_GOTENBERG_ENDPOINT
+              value: "http://gotenberg:3000"
+          volumeMounts:
+            - name: storage
+              mountPath: /usr/src/paperless/data
+            - name: media
+              mountPath: /usr/src/paperless/media
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: paperless-ngx-storage
+        - name: media
+          persistentVolumeClaim:
+            claimName: paperless-ngx-media

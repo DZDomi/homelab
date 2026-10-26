@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: ethereum
+  name: lighthouse
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: lighthouse
+  ports:
+    - name: beacon
+      port: 5052
+      targetPort: beacon
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: ethereum
+  name: lighthouse-p2p
+  labels:
+    vlan.example.com/external: "true"
+  annotations:
+    lbipam.cilium.io/ips: 10.1.4.3
+spec:
+  type: LoadBalancer
+  selector:
+    app: lighthouse
+  ports:
+    - name: p2p-tcp
+      port: 9000
+      targetPort: p2p-tcp
+    - name: p2p-udp
+      port: 9000
+      targetPort: p2p-udp
+      protocol: UDP
+    - name: p2p-quic
+      port: 9001
+      targetPort: p2p-quic
+      protocol: UDP

@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: nut
+  name: nut-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nut-exporter
+  template:
+    metadata:
+      labels:
+        app: nut-exporter
+    spec:
+      containers:
+        - name: nut-exporter
+          image: druggeri/nut_exporter:3.3.0
+          args:
+            # Empty exports every numeric variable, not just the default handful; an empty
+            # NUT_EXPORTER_VARIABLES counts as unset and falls back to the defaults
+            - --nut.vars_enable=
+          env:
+            # NUT server LXC on Proxmox (tofu/proxmox.tofu)
+            - name: NUT_EXPORTER_SERVER
+              value: "10.1.3.50"
+          ports:
+            - name: http
+              containerPort: 9199
+          resources:
+            requests:
+              cpu: 5m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]

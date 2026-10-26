@@ -1,0 +1,24 @@
+hostNetwork: true
+dnsPolicy: ClusterFirstWithHostNet
+
+persistence:
+  enabled: true
+  storageClass: iscsi-nvme
+
+ingress:
+  external: true
+initContainers:
+  - name: install-hacs
+    image: alpine:3.24
+    command: ["/bin/sh", "-c"]
+    args:
+      - |
+        set -e
+        if [ ! -d /config/custom_components/hacs ]; then
+          mkdir -p /config/custom_components/hacs
+          wget -qO /tmp/hacs.zip https://github.com/hacs/integration/releases/latest/download/hacs.zip
+          unzip -q /tmp/hacs.zip -d /config/custom_components/hacs
+        fi
+    volumeMounts:
+      - name: home-assistant
+        mountPath: /config

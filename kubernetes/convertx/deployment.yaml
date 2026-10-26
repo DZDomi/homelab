@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: convertx
+  name: convertx
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: convertx
+  template:
+    metadata:
+      labels:
+        app: convertx
+    spec:
+      containers:
+        - name: convertx
+          image: ghcr.io/c4illin/convertx:v0.19.0
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: ALLOW_UNAUTHENTICATED
+              value: "true"
+          volumeMounts:
+            - name: storage
+              mountPath: /app/data
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: convertx-storage

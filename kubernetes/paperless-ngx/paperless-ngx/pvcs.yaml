@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: paperless-ngx
+  name: paperless-ngx-storage
+  labels:
+    backup.example.com/offsite: "true"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: iscsi-nvme
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: paperless-ngx
+  name: paperless-ngx-media
+  labels:
+    backup.example.com/offsite: "true"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: iscsi-hdd

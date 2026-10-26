@@ -1,0 +1,15 @@
+maxretry = 3
+
+[${ups.name}]
+  driver = snmp-ups
+  port = ${ups.ip}
+  mibs = ${ups.mibs}
+  snmp_version = v3
+  secLevel = ${ups.snmp.sec_level}
+  secName = ${ups.snmp.sec_name}
+  authProtocol = ${ups.snmp.auth_protocol}
+  authPassword = ${auth_password}
+  privProtocol = ${ups.snmp.priv_protocol}
+  privPassword = ${priv_password}
+  pollfreq = 15
+  override.ups.realpower.nominal = ${ups.realpower_nominal}

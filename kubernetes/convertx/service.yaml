@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: convertx
+  name: convertx
+spec:
+  type: ClusterIP
+  selector:
+    app: convertx
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

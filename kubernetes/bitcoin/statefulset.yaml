@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: bitcoin
+  name: bitcoind
+spec:
+  serviceName: bitcoind
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bitcoind
+  template:
+    metadata:
+      labels:
+        app: bitcoind
+    spec:
+      containers:
+        - name: bitcoind
+          image: bitcoin/bitcoin:31.1
+          args:
+            - -conf=/etc/bitcoind/bitcoind.conf
+          env:
+            - name: BITCOIN_DATA
+              value: /var/lib/bitcoind
+          ports:
+            - name: p2p
+              containerPort: 8333
+          volumeMounts:
+            - name: config
+              subPath: bitcoind.conf
+              mountPath: /etc/bitcoind/bitcoind.conf
+            - name: storage
+              mountPath: /var/lib/bitcoind
+      volumes:
+        - name: config
+          configMap:
+            name: bitcoind-config
+      nodeSelector:
+        vlan.example.com/external: "true"
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+      spec:
+        storageClassName: iscsi-nvme
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1100Gi

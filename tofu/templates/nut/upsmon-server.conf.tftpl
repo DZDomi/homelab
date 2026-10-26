@@ -1,0 +1,10 @@
+MONITOR ${ups}@localhost 1 primary ${password} primary
+MINSUPPLIES 1
+
+# Only signals the secondaries. The LXC keeps serving until the Proxmox host stops it,
+# and no killpower flag is written, so the UPS is never told to cut its outlets
+SHUTDOWNCMD "/usr/bin/logger -t upsmon 'forced shutdown signalled to secondaries'"
+
+# Wait for secondaries to log out after FSD before running SHUTDOWNCMD
+HOSTSYNC 30
+FINALDELAY 5

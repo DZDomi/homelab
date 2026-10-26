@@ -1,0 +1,10 @@
+# Dashboards kept as JSON in this repo (rather than downloaded by url) are inlined here.
+dashboards:
+  kubernetes:
+    blocky:
+      json: |
+{{ readFile "dashboards/blocky.json" | indent 8 }}
+    # grafana.com 19308 rev 4 (DRuggeri nut_exporter), datasource uid swapped to ours
+    nut:
+      json: |
+{{ readFile "dashboards/nut.json" | indent 8 }}

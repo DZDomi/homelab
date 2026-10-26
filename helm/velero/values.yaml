@@ -1,0 +1,84 @@
+initContainers:
+  - name: velero-plugin-for-aws
+    image: velero/velero-plugin-for-aws:v1.14.4
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+# Only used for CSI snapshot data movement (no file-system backups), so no host paths
+# are needed and the node-agent fits the cluster's baseline Pod Security policy.
+deployNodeAgent: true
+nodeAgent:
+  disableHostPath: true
+
+credentials:
+  useSecret: true
+  existingSecret: b2-credentials
+
+configuration:
+  features: EnableCSI
+  # Velero records each maintenance result on the BackupRepository before cleaning up,
+  # so finished kopia-maintain jobs don't need to stick around
+  repositoryMaintenanceJob:
+    repositoryConfigData:
+      global:
+        keepLatestMaintenanceJobs: 0
+  # No native volume snapshotter needed — CSI snapshots (via democratic-csi) handle this instead.
+  volumeSnapshotLocation: []
+  defaultBackupStorageLocation: b2
+  backupStorageLocation:
+    - name: b2
+      provider: aws
+      bucket: 000000000000-homelab-velero-backups
+      default: true
+      config:
+        region: eu-central-003
+        s3Url: https://s3.eu-central-003.backblazeb2.com
+        s3ForcePathStyle: "true"
+        # Disable the AWS SDK's default CRC32 checksums, which S3-compatible stores like B2 may not support
+        checksumAlgorithm: ""
+      credential:
+        name: b2-credentials
+        key: cloud
+
+schedules:
+  k8s-manifests:
+    schedule: "0 3 * * *"
+    template:
+      ttl: "168h0m0s"
+      storageLocation: b2
+      snapshotVolumes: false
+      excludedNamespaceScopedResources:
+        - secrets
+
+  pvc-snapshots:
+    schedule: "0 4 * * *"
+    template:
+      ttl: "168h0m0s"
+      storageLocation: b2
+      snapshotVolumes: true
+      includedResources:
+        - persistentvolumeclaims
+        - persistentvolumes
+
+  # Uploads the contents of PVCs labeled backup.example.com/offsite=true, plus the current primary
+  # of every CNPG cluster, to B2 (kopia, client-side encrypted).
+  # Charts without a PVC labels option are labeled by hand (kubectl label pvc ... backup.example.com/offsite=true):
+  #   - home-assistant/home-assistant-home-assistant-0 (StatefulSet volumeClaimTemplate, immutable)
+  pvc-offsite:
+    schedule: "0 5 * * *"
+    template:
+      ttl: "336h0m0s"
+      storageLocation: b2
+      snapshotVolumes: true
+      snapshotMoveData: true
+      includedResources:
+        - persistentvolumeclaims
+        - persistentvolumes
+      orLabelSelectors:
+        - matchLabels:
+            backup.example.com/offsite: "true"
+        # CNPG keeps this label on the primary's PVC up to date across failovers
+        - matchLabels:
+            cnpg.io/instanceRole: primary

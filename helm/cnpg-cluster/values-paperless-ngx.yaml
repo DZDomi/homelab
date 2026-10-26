@@ -1,0 +1,3 @@
+version:
+  # renovate: datasource=docker depName=ghcr.io/cloudnative-pg/postgresql
+  postgresql: "18"

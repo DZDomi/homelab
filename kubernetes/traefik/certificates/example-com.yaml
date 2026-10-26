@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  namespace: traefik
+  name: example-com
+spec:
+  secretName: example-com-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt
+  commonName: example.com
+  dnsNames:
+    - example.com
+    - "*.example.com"

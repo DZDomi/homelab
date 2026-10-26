@@ -1,0 +1,223 @@
+deploymentStrategy:
+  type: Recreate
+
+persistence:
+  enabled: true
+  storageClassName: iscsi-nvme
+
+grafana.ini:
+  panels:
+    disable_sanitize_html: true
+
+# Provides TELEGRAM_BOT_TOKEN for the Telegram contact point (kubernetes/grafana/secret.yaml)
+envFromSecret: grafana-alerting
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: prometheus
+        uid: aevou4rq49bswc
+        type: prometheus
+        access: proxy
+        url: http://prometheus-server.prometheus.svc.cluster.local
+        isDefault: true
+
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: ethereum
+        folder: Ethereum
+        type: file
+        disableDeletion: true
+        options:
+          path: /var/lib/grafana/dashboards/ethereum
+      - name: cilium
+        folder: Cilium
+        type: file
+        disableDeletion: true
+        options:
+          path: /var/lib/grafana/dashboards/cilium
+      - name: cloudnative-pg
+        folder: CloudNativePG
+        type: file
+        disableDeletion: true
+        options:
+          path: /var/lib/grafana/dashboards/cloudnative-pg
+      - name: kubernetes
+        folder: K8s
+        type: file
+        disableDeletion: true
+        options:
+          path: /var/lib/grafana/dashboards/kubernetes
+
+# Reth dashboards, pinned to a reth commit and downloaded by an init container on pod start.
+# The datasource entries replace the ${...} import inputs in the exported JSON.
+dashboards:
+  ethereum:
+    reth-overview:
+      url: https://raw.githubusercontent.com/paradigmxyz/reth/1a4dbbe11264fd52e6e9fbe768aa83f9a6b73607/etc/grafana/dashboards/overview.json
+      datasource:
+        - name: DS_PROMETHEUS
+          value: aevou4rq49bswc
+        - name: DS_EXPRESSION
+          value: __expr__
+        - name: VAR_INSTANCE_LABEL
+          value: pod
+    reth-persistence:
+      url: https://raw.githubusercontent.com/paradigmxyz/reth/1a4dbbe11264fd52e6e9fbe768aa83f9a6b73607/etc/grafana/dashboards/reth-persistence.json
+      datasource:
+        - name: VAR_INSTANCE_LABEL
+          value: pod
+    reth-discovery:
+      url: https://raw.githubusercontent.com/paradigmxyz/reth/1a4dbbe11264fd52e6e9fbe768aa83f9a6b73607/etc/grafana/dashboards/reth-discovery.json
+      datasource:
+        - name: DS_PROMETHEUS
+          value: aevou4rq49bswc
+    reth-mempool:
+      url: https://raw.githubusercontent.com/paradigmxyz/reth/1a4dbbe11264fd52e6e9fbe768aa83f9a6b73607/etc/grafana/dashboards/reth-mempool.json
+      datasource:
+        - name: DS_PROMETHEUS
+          value: aevou4rq49bswc
+    reth-state-growth:
+      url: https://raw.githubusercontent.com/paradigmxyz/reth/1a4dbbe11264fd52e6e9fbe768aa83f9a6b73607/etc/grafana/dashboards/reth-state-growth.json
+      datasource:
+        - name: DS_PROMETHEUS
+          value: aevou4rq49bswc
+    lighthouse-missed-attestations:
+      url: https://raw.githubusercontent.com/sigp/lighthouse-metrics/4eacddef0325999f7e959589d3bccaecc2081749/dashboards/MissedAttestations.json
+      datasource:
+        - name: DS_PROMETHEUS
+          value: aevou4rq49bswc
+    lighthouse-summary:
+      url: https://raw.githubusercontent.com/sigp/lighthouse-metrics/4eacddef0325999f7e959589d3bccaecc2081749/dashboards/Summary.json
+      datasource:
+        - name: DS_PROMETHEUS
+          value: aevou4rq49bswc
+  # Bundled with the cilium chart; keep the tag in sync with the cilium release in helmfile.yaml.
+  # These pick the datasource through their own DS_PROMETHEUS variable. The Hubble DNS and L7 HTTP
+  # dashboards are left out because those metrics need L7 visibility (envoy is disabled).
+  cilium:
+    cilium-agent:
+      url: https://raw.githubusercontent.com/cilium/cilium/v1.20.2/install/kubernetes/cilium/files/cilium-agent/dashboards/cilium-dashboard.json
+    cilium-operator:
+      url: https://raw.githubusercontent.com/cilium/cilium/v1.20.2/install/kubernetes/cilium/files/cilium-operator/dashboards/cilium-operator-dashboard.json
+    hubble:
+      url: https://raw.githubusercontent.com/cilium/cilium/v1.20.2/install/kubernetes/cilium/files/hubble/dashboards/hubble-dashboard.json
+    hubble-network-overview:
+      url: https://raw.githubusercontent.com/cilium/cilium/v1.20.2/install/kubernetes/cilium/files/hubble/dashboards/hubble-network-overview-namespace.json
+      # there's no cluster label on our metrics, so an empty $cluster would match nothing
+      datasource:
+        - name: cluster
+          value: .*
+  cloudnative-pg:
+    cloudnative-pg:
+      url: https://raw.githubusercontent.com/cloudnative-pg/grafana-dashboards/47e4c51219fdbb3c7ef2c4d91a2d8855e9ca1880/charts/cluster/grafana-dashboard.json
+      datasource:
+        - name: DS_EXPRESSION
+          value: __expr__
+  kubernetes:
+    coredns:
+      url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/e4faf59e017a18e1b06fa64f11623bef15ce7507/dashboards/k8s-system-coredns.json
+    velero-overview:
+      gnetId: 23838
+      revision: 1
+      datasource:
+        - name: DS_PROMETHEUS
+          value: aevou4rq49bswc
+
+# Alert templates are wrapped in {{`...`}} so helm's tpl leaves them alone.
+alerting:
+  contactpoints.yaml:
+    apiVersion: 1
+    contactPoints:
+      - orgId: 1
+        name: Telegram
+        receivers:
+          - uid: efejqa8nqjda8e
+            type: telegram
+            settings:
+              bottoken: $TELEGRAM_BOT_TOKEN
+              chatid: "SETME"
+              message: |-
+                {{`{{- range .Alerts.Firing }}
+                {{ .Annotations.summary }}
+                {{- end }}`}}
+
+  rules.yaml:
+    apiVersion: 1
+    groups:
+      - orgId: 1
+        name: K8s
+        folder: K8s
+        interval: 1m
+        rules:
+          - uid: cfelkvq019ngge
+            title: PVC running out of space
+            condition: C
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: aevou4rq49bswc
+                model:
+                  editorMode: code
+                  expr: |-
+                    (1 - kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes) * 100
+                  instant: true
+                  refId: A
+              - refId: C
+                datasourceUid: __expr__
+                model:
+                  type: threshold
+                  expression: A
+                  conditions:
+                    - evaluator:
+                        type: gt
+                        params: [90]
+                  refId: C
+            noDataState: NoData
+            execErrState: Error
+            for: 0s
+            annotations:
+              summary: '{{`PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is {{ printf "%.1f" $values.A.Value }}% full`}}'
+            notification_settings:
+              receiver: Telegram
+
+          - uid: fg0w9bjsq3gg0a
+            title: Pod in CrashLoopBackOff
+            condition: C
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: aevou4rq49bswc
+                model:
+                  editorMode: code
+                  # max_over_time smooths over the brief "Running" blips between restarts
+                  expr: |-
+                    max by (namespace, pod, container) (
+                      max_over_time(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff"}[2m])
+                    )
+                  instant: true
+                  refId: A
+              - refId: C
+                datasourceUid: __expr__
+                model:
+                  type: threshold
+                  expression: A
+                  conditions:
+                    - evaluator:
+                        type: gt
+                        params: [0]
+                  refId: C
+            noDataState: OK
+            execErrState: Error
+            for: 5m
+            annotations:
+              summary: '{{`Pod {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) has been in CrashLoopBackOff for over 5 minutes`}}'
+            notification_settings:
+              receiver: Telegram

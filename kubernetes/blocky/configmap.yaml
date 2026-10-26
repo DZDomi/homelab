@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: blocky
+  name: blocky-config
+data:
+  config.yaml: |
+    ports:
+      http: 4000
+    
+    upstreams:
+      groups:
+        default:
+          - tcp-tls:security.cloudflare-dns.com
+    
+    blocking:
+      denylists:
+        ads:
+          - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+      allowlists:
+        ads:
+          - |
+            www.googleadservices.com
+      clientGroupsBlock:
+        default:
+          - ads
+
+    caching:
+      cacheTimeNegative: -1m
+
+    prometheus:
+      enable: true

@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: teslamate
+  name: teslamate
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teslamate
+  template:
+    metadata:
+      labels:
+        app: teslamate
+    spec:
+      containers:
+        - name: teslamate
+          image: teslamate/teslamate:4.3.0
+          ports:
+            - name: http
+              containerPort: 4000
+          env:
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: teslamate
+                  key: ENCRYPTION_KEY
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: teslamate
+                  key: DATABASE_USER
+            - name: DATABASE_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: teslamate
+                  key: DATABASE_PASS
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: teslamate
+                  key: DATABASE_NAME
+            - name: DATABASE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: teslamate
+                  key: DATABASE_HOST
+            - name: MQTT_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: teslamate
+                  key: MQTT_HOST
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: import
+              mountPath: /opt/app/import
+      volumes:
+        - name: import
+          persistentVolumeClaim:
+            claimName: teslamate-import

@@ -1,0 +1,59 @@
+ipam:
+  mode: kubernetes
+kubeProxyReplacement: true
+securityContext:
+  capabilities:
+    ciliumAgent:
+      - CHOWN
+      - KILL
+      - NET_ADMIN
+      - NET_RAW
+      - IPC_LOCK
+      - SYS_ADMIN
+      - SYS_RESOURCE
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    cleanCiliumState:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_RESOURCE
+cgroup:
+  autoMount:
+    enabled: false
+  hostRoot: /sys/fs/cgroup
+k8sServiceHost: localhost
+k8sServicePort: 7445
+
+envoy:
+  enabled: false
+  # the embedded proxy only runs with L7 policies, so its metrics target would always be down
+  prometheus:
+    enabled: false
+
+prometheus:
+  enabled: true
+
+hubble:
+  enabled: true
+  # labelsContext adds the namespace labels the Hubble namespace dashboards filter on
+  metrics:
+    enabled:
+      - flow:labelsContext=source_namespace,destination_namespace
+      - drop:labelsContext=source_namespace,destination_namespace
+      - tcp:labelsContext=source_namespace,destination_namespace
+      - icmp:labelsContext=source_namespace,destination_namespace
+      - port-distribution:labelsContext=source_namespace,destination_namespace
+  relay:
+    enabled: true
+  ui:
+    enabled: true
+
+l2announcements:
+  enabled: true
+
+tunnelProtocol: geneve
+loadBalancer:
+  mode: dsr
+  dsrDispatch: geneve
