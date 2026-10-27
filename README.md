@@ -1,7 +1,7 @@
 # homelab
 
-Infrastructure for my home Kubernetes cluster: three bare-metal nodes running [Talos Linux](https://www.talos.dev/),
-with all persistent data living on a TrueNAS server. Everything is declared in this repository:
+Infrastructure for my home Kubernetes cluster: three nodes running [Talos Linux](https://www.talos.dev/), with all
+persistent data living on TrueNAS. Everything is declared in this repository:
 
 | Directory     | What it manages                                   | Applied with                     |
 |---------------|---------------------------------------------------|----------------------------------|
@@ -12,12 +12,23 @@ with all persistent data living on a TrueNAS server. Everything is declared in t
 
 ## Nodes
 
-- **Talos Linux** on three bare-metal machines: one control plane node (which also schedules regular workloads) and two
-  workers. Machine configs are generated and applied by OpenTofu with the
+- **Talos Linux** on three nodes: a control plane (which also schedules regular workloads) running as a VM on the
+  Proxmox host, and two bare-metal workers. Machine configs are generated and applied by OpenTofu with the
   [siderolabs/talos](https://registry.terraform.io/providers/siderolabs/talos) provider, using an Image Factory
   schematic for system extensions such as `iscsi-tools`.
-- **Proxmox** hosts small supporting services as LXC containers, currently a [NUT](https://networkupstools.org/)
-  server that reads the UPS over SNMP and tells the nodes when to shut down.
+- **Proxmox** runs the Talos control plane and TrueNAS as VMs, plus small supporting services as LXC containers:
+  currently a [NUT](https://networkupstools.org/) server that reads the UPS over SNMP and tells the nodes when to
+  shut down.
+
+### Hardware
+
+| Machine             | Runs                          | CPU                                       | Memory     | Network                                   |
+|---------------------|-------------------------------|-------------------------------------------|------------|-------------------------------------------|
+| Proxmox host        | Control plane VM, TrueNAS VM  | AMD EPYC 9135 (16 cores, 32 threads)      | 64 GB      | 2× 10 Gbit/s fiber with link aggregation  |
+| 2× Minisforum MS-A2 | Workers                       | AMD Ryzen 9 7945HX (16 cores, 32 threads) | 64 GB each | 10 Gbit/s fiber                           |
+
+The workers connect to a UniFi Switch Aggregation (USW Aggregation) over 10 Gbit/s fiber. The Proxmox host bonds its
+two 10 Gbit/s fiber uplinks with link aggregation.
 
 ## Storage
 
@@ -25,8 +36,15 @@ The nodes themselves are disposable: every persistent volume lives on **TrueNAS*
 [democratic-csi](https://github.com/democratic-csi/democratic-csi) driver talks to the TrueNAS API and creates a ZFS
 dataset or zvol for each PersistentVolumeClaim, then attaches it to the node that needs it.
 
-TrueNAS has two ZFS pools: **sonic** on NVMe SSDs and **rotato** on spinning HDDs. Each storage class keeps its
-volumes under `<pool>/k8s/<protocol>/v` and detached snapshots under `<pool>/k8s/<protocol>/s`.
+TrueNAS runs as a VM on the Proxmox host, and its two ZFS pools are built from the drives in that host:
+
+| Pool     | Data drives      | Layout                      | Support drives                                    |
+|----------|------------------|-----------------------------|---------------------------------------------------|
+| `sonic`  | 4× 2 TB NVMe SSD | RAIDZ1                      | –                                                 |
+| `rotato` | 4× 4 TB HDD      | 2 mirrors of 2 drives each  | 2 TB SSD as log (SLOG), 2 TB SSD as cache (L2ARC) |
+
+Each storage class keeps its volumes under `<pool>/k8s/<protocol>/v` and detached snapshots under
+`<pool>/k8s/<protocol>/s`.
 
 | StorageClass | Protocol | ZFS pool          | Used for                                          |
 |--------------|----------|-------------------|---------------------------------------------------|
