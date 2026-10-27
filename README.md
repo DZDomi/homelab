@@ -1,5 +1,9 @@
 # homelab
 
+<p align="center">
+  <img src="docs/images/rack-front.jpg" alt="The homelab rack: UniFi network gear at the top, the two Minisforum MS-A2 workers below it, the 4U Proxmox host and the UPS at the bottom" width="420">
+</p>
+
 Infrastructure for my home Kubernetes cluster: three nodes running [Talos Linux](https://www.talos.dev/), with all
 persistent data living on TrueNAS. Everything is declared in this repository:
 
@@ -31,6 +35,19 @@ The network is split into two VLANs: an internal **servers** VLAN and an **exter
 internet. Each worker has two 10 Gbit/s fiber uplinks to a UniFi Switch Aggregation (USW Aggregation), one on each
 VLAN, so internet-facing services only ever reach the cluster through the workers. The control plane and TrueNAS
 are only on the servers VLAN; the Proxmox host bonds its two 10 Gbit/s fiber uplinks with link aggregation.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/server-rails.jpg" alt="The 4U Proxmox host pulled out of the rack on its rails" height="240"></td>
+    <td align="center"><img src="docs/images/server-top.jpg" alt="Top-down view inside the Proxmox host: CPU cooler, power supply, the four HDDs and the PCIe card" height="240"></td>
+    <td align="center"><img src="docs/images/hyper-m2-card.jpg" alt="Close-up of the Hyper M.2 x16 Gen5 card holding the four NVMe drives of the sonic pool" height="240"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>The Proxmox host slides out on rails</sub></td>
+    <td align="center"><sub>Inside: EPYC 9135, power supply and the four <code>rotato</code> HDDs</sub></td>
+    <td align="center"><sub>Hyper M.2 x16 Gen5 card with the four <code>sonic</code> NVMe drives</sub></td>
+  </tr>
+</table>
 
 ## Storage
 
