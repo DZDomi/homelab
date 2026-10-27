@@ -40,7 +40,7 @@ are only on the servers VLAN; the Proxmox host bonds its two 10 Gbit/s fiber upl
   <tr>
     <td align="center"><img src="docs/images/server-rails.jpg" alt="The 4U Proxmox host pulled out of the rack on its rails" height="240"></td>
     <td align="center"><img src="docs/images/server-top.jpg" alt="Top-down view inside the Proxmox host: CPU cooler, power supply, the four HDDs and the PCIe card" height="240"></td>
-    <td align="center"><img src="docs/images/hyper-m2-card.jpg" alt="Close-up of the Hyper M.2 x16 Gen5 card holding the four NVMe drives of the sonic pool" height="240"></td>
+    <td align="center"><img src="docs/images/hyper-m2-card.jpg" alt="The ASUS Hyper M.2 x16 Gen5 card holding the four Crucial NVMe drives of the sonic pool" height="240"></td>
   </tr>
   <tr>
     <td align="center"><sub>The Proxmox host slides out on rails</sub></td>
