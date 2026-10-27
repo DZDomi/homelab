@@ -26,10 +26,10 @@ persistent data living on TrueNAS. Everything is declared in this repository:
 
 ### Hardware
 
-| Machine             | Runs                          | CPU                                       | Memory     | Network                                   |
-|---------------------|-------------------------------|-------------------------------------------|------------|-------------------------------------------|
-| Proxmox host        | Control plane VM, TrueNAS VM  | AMD EPYC 9135 (16 cores, 32 threads)      | 64 GB      | 2× 10 Gbit/s fiber with link aggregation  |
-| 2× Minisforum MS-A2 | Workers                       | AMD Ryzen 9 7945HX (16 cores, 32 threads) | 64 GB each | 2× 10 Gbit/s fiber, one per VLAN          |
+| Machine                            | Runs                         | CPU                                       | Memory     | Network                                  |
+|------------------------------------|------------------------------|-------------------------------------------|------------|------------------------------------------|
+| Proxmox host (Supermicro H13SSL-N) | Control plane VM, TrueNAS VM | AMD EPYC 9135 (16 cores, 32 threads)      | 64 GB      | 2× 10 Gbit/s fiber with link aggregation |
+| 2× Minisforum MS-A2                | Workers                      | AMD Ryzen 9 7945HX (16 cores, 32 threads) | 64 GB each | 2× 10 Gbit/s fiber, one per VLAN         |
 
 The network is split into two VLANs: an internal **servers** VLAN and an **external** VLAN for access from the
 internet. Each worker has two 10 Gbit/s fiber uplinks to a UniFi Switch Aggregation (USW Aggregation), one on each
@@ -40,12 +40,12 @@ are only on the servers VLAN; the Proxmox host bonds its two 10 Gbit/s fiber upl
   <tr>
     <td align="center"><img src="docs/images/server-rails.jpg" alt="The 4U Proxmox host pulled out of the rack on its rails" height="240"></td>
     <td align="center"><img src="docs/images/server-top.jpg" alt="Top-down view inside the Proxmox host: CPU cooler, power supply, the four HDDs and the PCIe card" height="240"></td>
-    <td align="center"><img src="docs/images/hyper-m2-card.jpg" alt="The ASUS Hyper M.2 x16 Gen5 card holding the four Crucial NVMe drives of the sonic pool" height="240"></td>
+    <td align="center"><img src="docs/images/hyper-m2-card.jpg" alt="The ASUS Hyper M.2 x16 Gen5 card holding the four Crucial P510 2 TB NVMe drives of the sonic pool" height="240"></td>
   </tr>
   <tr>
     <td align="center"><sub>The Proxmox host slides out on rails</sub></td>
-    <td align="center"><sub>Inside: EPYC 9135, power supply and the four <code>rotato</code> HDDs</sub></td>
-    <td align="center"><sub>Hyper M.2 x16 Gen5 card with the four <code>sonic</code> NVMe drives</sub></td>
+    <td align="center"><sub>Inside: Supermicro H13SSL-N with the EPYC 9135, power supply and the four <code>rotato</code> HDDs</sub></td>
+    <td align="center"><sub>ASUS Hyper M.2 x16 Gen5 card with the four Crucial P510 2 TB drives of <code>sonic</code></sub></td>
   </tr>
 </table>
 
@@ -57,10 +57,10 @@ dataset or zvol for each PersistentVolumeClaim, then attaches it to the node tha
 
 TrueNAS runs as a VM on the Proxmox host, and its two ZFS pools are built from the drives in that host:
 
-| Pool     | Data drives      | Layout                      | Support drives                                    |
-|----------|------------------|-----------------------------|---------------------------------------------------|
-| `sonic`  | 4× 2 TB NVMe SSD | RAIDZ1                      | –                                                 |
-| `rotato` | 4× 4 TB HDD      | 2 mirrors of 2 drives each  | 2 TB SSD as log (SLOG), 2 TB SSD as cache (L2ARC) |
+| Pool     | Data drives                   | Layout                     | Support drives                                    |
+|----------|-------------------------------|----------------------------|---------------------------------------------------|
+| `sonic`  | 4× Crucial P510 2 TB NVMe SSD | RAIDZ1                     | –                                                 |
+| `rotato` | 4× 4 TB HDD                   | 2 mirrors of 2 drives each | 2 TB SSD as log (SLOG), 2 TB SSD as cache (L2ARC) |
 
 Each storage class keeps its volumes under `<pool>/k8s/<protocol>/v` and detached snapshots under
 `<pool>/k8s/<protocol>/s`.
