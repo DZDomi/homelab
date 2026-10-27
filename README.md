@@ -25,10 +25,12 @@ persistent data living on TrueNAS. Everything is declared in this repository:
 | Machine             | Runs                          | CPU                                       | Memory     | Network                                   |
 |---------------------|-------------------------------|-------------------------------------------|------------|-------------------------------------------|
 | Proxmox host        | Control plane VM, TrueNAS VM  | AMD EPYC 9135 (16 cores, 32 threads)      | 64 GB      | 2× 10 Gbit/s fiber with link aggregation  |
-| 2× Minisforum MS-A2 | Workers                       | AMD Ryzen 9 7945HX (16 cores, 32 threads) | 64 GB each | 10 Gbit/s fiber                           |
+| 2× Minisforum MS-A2 | Workers                       | AMD Ryzen 9 7945HX (16 cores, 32 threads) | 64 GB each | 2× 10 Gbit/s fiber, one per VLAN          |
 
-The workers connect to a UniFi Switch Aggregation (USW Aggregation) over 10 Gbit/s fiber. The Proxmox host bonds its
-two 10 Gbit/s fiber uplinks with link aggregation.
+The network is split into two VLANs: an internal **servers** VLAN and an **external** VLAN for access from the
+internet. Each worker has two 10 Gbit/s fiber uplinks to a UniFi Switch Aggregation (USW Aggregation), one on each
+VLAN, so internet-facing services only ever reach the cluster through the workers. The control plane and TrueNAS
+are only on the servers VLAN; the Proxmox host bonds its two 10 Gbit/s fiber uplinks with link aggregation.
 
 ## Storage
 
